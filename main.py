@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 from datetime import datetime, timedelta
+import pandas as pd
+import numpy as np
 
 import pandas as pd
 
@@ -81,7 +83,7 @@ def use_github_cli_to_calculate_lead_time(owner, repo, branch) -> dict:
             commits = json.loads(commits_output)
             for commit in commits:
                 commit_date = datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ')
-                lead_time = (merge_date - commit_date).total_seconds()
+                lead_time = calculate_business_minutes(commit_date, merge_date) * 60
                 lead_times.append(lead_time)
 
     if lead_times:
@@ -166,9 +168,21 @@ def read_failure_csv(file_path: str) -> pd.DataFrame:
     df['datetime_failure_remedied'] = pd.to_datetime(df['datetime_failure_remedied'])
     return df
 
+def calculate_business_minutes(start_time, end_time):
+        # Calculate the number of business minutes between two datetimes
+        business_minutes = 0
+        current_time = start_time
+        while current_time < end_time:
+            if current_time.weekday() < 5 and current_time.hour >= 6 and current_time.hour < 22:
+                business_minutes += 1
+            current_time += pd.Timedelta(minutes=1)
+        return business_minutes
+
 def calculate_failure_metrics(df: pd.DataFrame) -> pd.DataFrame:
+
+
     # Calculate the time to restore service for each failure
-    df['time_to_restore_service'] = (df['datetime_failure_remedied'] - df['datetime_failure_reported']).dt.total_seconds() / 60
+    df['time_to_restore_service'] = df.apply(lambda row: calculate_business_minutes(row['datetime_failure_reported'], row['datetime_failure_remedied']), axis=1)
 
     # Group the data by app name
     grouped = df.groupby('app_name')
@@ -178,6 +192,14 @@ def calculate_failure_metrics(df: pd.DataFrame) -> pd.DataFrame:
         number_of_failures=('app_name', 'count'),
         average_time_to_restore_service_minutes=('time_to_restore_service', 'mean')
     ).reset_index()
+
+    # calculate the median time to restore service for each app
+    metrics = metrics.merge(
+        grouped.agg(
+            median_time_to_restore_service_minutes=('time_to_restore_service', 'median')
+        ).reset_index(),
+        on='app_name'
+    )
 
     return metrics
 
@@ -197,14 +219,28 @@ def main(github_config_file_path,
 
         failure_df = read_failure_csv(failure_excel_file_path)
         metrics = calculate_failure_metrics(failure_df)
-        print(metrics)
 
         # combine the two dataframes
         result = pd.merge(lead_time_df, metrics, how='left', left_on='app_name', right_on='app_name')
         # convert all NaN values to 0
         result = result.fillna(0)
         # for all cells containing a float, round to nearest integer
-        result['average_lead_time_days'] = result['average_lead_time_seconds'] / 60 / 60 / 24
+        result['average_lead_time_business_days'] = result['average_lead_time_seconds'] / 60 / 60 / 8
+
+        result['average_lead_time_business_days'] = result['average_lead_time_business_days'].round(1)
+        result['average_lead_time_business_days'] = result['average_lead_time_business_days'].round(0)
+
+        # drop the average_lead_time_seconds column
+        result = result.drop(columns=['average_lead_time_seconds', 'average_time_to_restore_service_minutes'])
+
+        # add a column that calculates the percentage of failures over the number of deployments for each app (if there are no deployments, the percentage is 0)
+        result = result.assign(change_failure_rate=lambda x: x['number_of_failures'] / x['deployment_count'] * 100)
+
+        # correct for any NaN values and inf values
+        result = result.fillna(0)
+        result = result.replace([np.inf, -np.inf], 0)
+
+        result = result.drop(columns=['number_of_failures'])
 
         # loop over all rows in the dataframe
         # loop over all columns
