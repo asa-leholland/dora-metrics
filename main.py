@@ -68,6 +68,7 @@ def use_github_cli_to_calculate_lead_time(owner, repo, branch) -> dict:
     pulls_command = f'gh api repos/{owner}/{repo}/pulls?state=closed'
     pulls_output = run_gh_command(pulls_command)
     pulls = json.loads(pulls_output)
+
     filtered_pulls = []
     for pull in pulls:
         if pull['merged_at'] is not None and pull['merged_at'] > since_date and pull['base']['ref'] == branch:
@@ -88,7 +89,7 @@ def use_github_cli_to_calculate_lead_time(owner, repo, branch) -> dict:
 
     if lead_times:
         average_lead_time = sum(lead_times) / len(lead_times)
-        print(f'Average lead time for {repo}: {average_lead_time:.2f} seconds ({len(lead_times)} deployments))')
+        print(f'Average lead time for {repo}: {average_lead_time:.2f} seconds ({len(lead_times)} deployments)')
         return {'average_lead_time': average_lead_time, 'sum': sum(lead_times), 'count': len(lead_times)}
     else:
         print(f' - No lead times found for {repo}.')
@@ -209,10 +210,9 @@ def main(github_config_file_path,
          output_csv_file_path):
 
 
+    github_config = read_github_config(github_config_file_path)
 
-    # github_config = read_github_config(github_config_file_path)
-
-    # write_github_data_to_csv(github_config)
+    write_github_data_to_csv(github_config)
 
     with open('github_data.csv', 'r') as f:
         lead_time_df = pd.read_csv(f)

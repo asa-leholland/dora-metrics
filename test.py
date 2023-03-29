@@ -46,6 +46,7 @@ app2,user,repo2,main
     config = read_github_config(MOCK_CONFIG_FILENAME)
 
     assert set(config.keys()) == {'app1', 'app2'}
+
     assert set(config['app1'].keys()) == {'owner', 'repo', 'branch'}
     assert set(config['app2'].keys()) == {'owner', 'repo', 'branch'}
     assert config['app1']['owner'] == 'user'
