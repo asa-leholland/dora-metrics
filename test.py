@@ -36,19 +36,24 @@ def test_get_lead_time_seconds_for_changes():
 
 def test_read_github_config():
     MOCK_CONFIG_FILENAME = 'config.csv'
-    config_file = StringIO("""application_name,github_repo,main_branch
-app1,https://github.com/user/repo1,master
-app2,https://github.com/user/repo2,main
+    config_file = StringIO("""application_name,github_owner,github_repo,main_branch
+app1,user,repo1,master
+app2,user,repo2,main
 """)
     with open(MOCK_CONFIG_FILENAME, 'w') as file:
         file.write(config_file.read())
 
     config = read_github_config(MOCK_CONFIG_FILENAME)
 
-    assert config == {
-        'app1': {'repo': 'https://github.com/user/repo1', 'branch': 'master'},
-        'app2': {'repo': 'https://github.com/user/repo2', 'branch': 'main'}
-    }
+    assert set(config.keys()) == {'app1', 'app2'}
+    assert set(config['app1'].keys()) == {'owner', 'repo', 'branch'}
+    assert set(config['app2'].keys()) == {'owner', 'repo', 'branch'}
+    assert config['app1']['owner'] == 'user'
+    assert config['app1']['repo'] == 'repo1'
+    assert config['app1']['branch'] == 'master'
+    assert config['app2']['owner'] == 'user'
+    assert config['app2']['repo'] == 'repo2'
+    assert config['app2']['branch'] == 'main'
 
     os.remove(MOCK_CONFIG_FILENAME)
 

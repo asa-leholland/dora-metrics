@@ -25,7 +25,7 @@ def read_github_config(file_path) -> dict:
         for row in reader:
             app_name = row['application_name']
             owner= row['github_owner']
-            repo = row['repo_name']
+            repo = row['github_repo']
             branch = row['main_branch']
             if app_name and repo and branch:
                 config[app_name] = {'repo': repo, 'branch': branch, 'owner': owner}
