@@ -89,8 +89,8 @@ def use_github_cli_to_calculate_lead_time(owner, repo, branch) -> dict:
 
     if lead_times:
         average_lead_time = sum(lead_times) / len(lead_times)
-        print(f'Average lead time for {repo}: {average_lead_time:.2f} seconds ({len(lead_times)} deployments)')
-        return {'average_lead_time': average_lead_time, 'sum': sum(lead_times), 'count': len(lead_times)}
+        print(f'Average lead time for {repo}: {average_lead_time:.2f} seconds ({len(lead_times)} commits) for the last {time_period_days} business days. ({len(filtered_pulls)} merges)')
+        return {'average_lead_time': average_lead_time, 'sum': sum(lead_times), 'count': len(filtered_pulls)}
     else:
         print(f' - No lead times found for {repo}.')
         return {'average_lead_time': 0, 'sum': 0, 'count': 0}
@@ -249,6 +249,13 @@ def main(github_config_file_path,
 
         # add an additional column for the number of average lead time in days
         print(result)
+        result.columns = [
+            'App Name',
+            'Deployment Count',
+            'Median Time to Restore Service (Minutes)',
+            'Average Lead Time (Business Days)',
+            'Change Failure Rate'
+            ]
         result.to_csv('output.csv', index=False)
 
 

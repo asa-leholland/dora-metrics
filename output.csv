@@ -1,7 +1,0 @@
-app_name,deployment_count,median_time_to_restore_service_minutes,average_lead_time_business_days,change_failure_rate
-IMS API,0,0.0,0.0,0.0
-IMS UI,0,0.0,0.0,0.0
-Admin,8,0.0,4.0,0.0
-TPS,0,12.0,0.0,0.0
-FPKG,0,0.0,0.0,0.0
-SFS Testcard,0,38.0,0.0,0.0
