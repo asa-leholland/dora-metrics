@@ -5,3 +5,4 @@ venv/
 failures.csv
 github_config.csv
 usage.csv
+output.csv
