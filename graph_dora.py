@@ -5,6 +5,18 @@ from matplotlib.backends.backend_pdf import PdfPages
 # Read the Excel data into a DataFrame
 df = pd.read_excel('Book1.xlsx')
 
+# Clean the column names by removing any invisible characters
+df.columns = df.columns.str.replace('\u200b', '')
+
+# Print the column names to verify their correctness
+print(df.columns)
+
+# Update the column names in the numeric_columns list
+numeric_columns = ['Deployment Count', 'Median Time to Restore Service', 'Average Lead Time', 'Change Failure Rate']
+
+# Convert the relevant columns to numeric types
+df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
+
 # Sort the DataFrame by the 'Date' column
 df = df.sort_values('Date')
 
