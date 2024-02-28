@@ -29,7 +29,7 @@ Overall, this project aims to provide actionable insights into software developm
 
 1. Navigate to <https://github.com/settings/tokens>
 2. Create an access token and save to GITHUB_PERSONAL_ACCESS_TOKEN in your `.env`
-3. Install GitHub Cli using `brew install gh` on Mac or `winget installl --id GitHub.cli` on Windows.
+3. Install GitHub Cli using `brew install gh` on Mac or `winget install --id GitHub.cli` on Windows.
 4. Run `gh auth login` and provide GitHub credentials.
 5. Create `github_config.csv` using the template to indicate which repos you want to analyze.
 6. Create `failures.csv` using the template and populate with the failure results you want to analyze.
